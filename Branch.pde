@@ -5,31 +5,34 @@
 
 class Branch 
 {
+  // Base data
   Branch parent;
   ArrayList<Branch> branches = new ArrayList<Branch>(); 
   PVector o;
   PVector dir;
   PVector end;
+  int numChildren;
   
-  float childLenghtlowerBound = 0.15;
-  float childLenghtupperBound = 0.6;
-
+  // Center of mass
   CenterOfMass branchCenterMass;
   CenterOfMass lvlCenterMass;
   int massFactor; 
 
+  // Accounting data
   int lvl;
   int branchNum;
-  int maxLvl = 5;
+  int maxLvl = 3;
+  
+  // Limiting variablies
   int maxNewBranches = 10;
   int minNewBranches = 0;
   float maxBranchAngle = PI/4;
+  float childLenghtlowerBound = 0.15;
+  float childLenghtupperBound = 0.6;
   
+  // Settings
   boolean DRAW_BRANCH_CENTER_OF_MASS = false;
-  
   boolean DRAW_LVL_CENTER_OF_MASS = true;
-  
-  
   color BRANCH_COL = color(255);
 
   Branch(Branch _parent) 
@@ -60,7 +63,7 @@ class Branch
     o = _o;
     dir = _dir;
     end = PVector.sub(o, _dir);
-   
+   numChildren = ceil(random(minNewBranches - 1, maxNewBranches));
     if (_parent == null) // if first branch
     {
       lvl = 0;
@@ -111,14 +114,12 @@ class Branch
       return false;  
     if (branches.size() > 0)
     {
-      for (int i = 0; i < branches.size(); i++)
-      {
-        branches.get(i).Grow();
-      }
+      for (Branch branch : branches)
+        branch.Grow();
     } else 
     {
       Split();
-      for (int i = 0; i < ceil(random(minNewBranches - 1, maxNewBranches)); i++)
+      for (int i = 0; i < numChildren; i++)
       {
         branches.add(new Branch(this));
       }
@@ -135,7 +136,8 @@ class Branch
   PVector RandomPointOnLine(PVector a, PVector b)
   {
     //(1−u)p1+up2
-    float u = random(1);
+    //float u = random(1);
+    float u = abs(randomGaussian())*0.2+0.5;
     return PVector.add(PVector.mult(a, 1 - u), PVector.mult(b, u));
   }
 
@@ -158,7 +160,6 @@ class Branch
   {
     //strokeWeight( maxLvl + 2 - lvl);
     stroke(BRANCH_COL);
-    stroke(255);
     line(o.x, o.y, end.x, end.y);    
 
     if (DRAW_LVL_CENTER_OF_MASS && lvl < 1)
