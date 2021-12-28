@@ -8,88 +8,68 @@ class Branch
   // Base data
   Branch parent;
   ArrayList<Branch> branches = new ArrayList<Branch>(); 
-  PVector o;
-  PVector dir;
-  PVector end;
-  int numChildren;
-  
-  // Center of mass
-  CenterOfMass branchCenterMass;
-  CenterOfMass lvlCenterMass;
-  int massFactor; 
+  float angle;
+  float len; 
+  float locOnParent; // [0,1]
+  int numChildBranches;
 
   // Accounting data
   int lvl;
   int branchNum;
-  int maxLvl = 3;
-  
+  int maxLvl = 6;
+
   // Limiting variablies
   int maxNewBranches = 10;
   int minNewBranches = 0;
+  float minBranchAngle = -PI/4;
   float maxBranchAngle = PI/4;
-  float childLenghtlowerBound = 0.15;
-  float childLenghtupperBound = 0.6;
-  
-  // Settings
-  boolean DRAW_BRANCH_CENTER_OF_MASS = false;
-  boolean DRAW_LVL_CENTER_OF_MASS = true;
-  color BRANCH_COL = color(255);
+  float childLenghtlowerBound = 0.3;
+  float childLenghtupperBound = 0.8;
 
-  Branch(Branch _parent) 
-  {
-    Setup(_parent, RandomPointOnLine(_parent.o, _parent.end), NewBranchDir(_parent.dir));
-  }
+  // Settings
+  color BRANCH_COL = color(255);
+  boolean PRINT_INFO = false;
 
   // top of branch split
-  Branch(Branch _parent, PVector _o) 
+  Branch(Branch _parent, float _locOnParent) 
   {
-    Setup(_parent, _o, NewBranchDir(_parent.dir));
+    Setup(_parent);
+    locOnParent = _locOnParent; // override
   }
 
   // first branch
-  Branch(PVector _o, PVector _dir) 
+  Branch(float _len) 
   {
-    Setup(null, _o, _dir);
+    Setup(null);
+    len = _len;
   }
 
-  Branch(Branch _parent, PVector _o, PVector _dir) 
+  Branch(Branch _parent) 
   {
-    Setup(_parent, _o, _dir);
+    Setup(_parent);
   }
-  
-  void Setup(Branch _parent, PVector _o, PVector _dir) 
+
+  void Setup(Branch _parent) 
   {
     parent = _parent;
-    o = _o;
-    dir = _dir;
-    end = PVector.sub(o, _dir);
-   numChildren = ceil(random(minNewBranches - 1, maxNewBranches));
+    numChildBranches = ceil(random(minNewBranches - 1, maxNewBranches));
+
     if (_parent == null) // if first branch
     {
+      angle = 0;
+      locOnParent = 0;
       lvl = 0;
       branchNum = 0;
-      massFactor = maxLvl;
     } else
     {
+      angle = BranchAngle();
+      locOnParent=LocationOnParent(); 
+      len = BranchLength(_parent.len);
       lvl = _parent.lvl + 1;
       branchNum = _parent.branches.size();
-      massFactor = max(_parent.massFactor - 1, 1);
-      
     }
-    branchCenterMass = new CenterOfMass(PVector.sub(o, PVector.mult(dir, 0.5)), dir.mag()*massFactor);
-    lvlCenterMass = new CenterOfMass(branchCenterMass.center.copy(), branchCenterMass.mass, false);
-    UpdateParentCenterMass(branchCenterMass);
-    //PrintBranchInfo(_parent);
-  }
-
-  void UpdateParentCenterMass(CenterOfMass newMass)
-  {
-    Branch tmpParent = parent;
-    for (int i = lvl  - 1; i >= 0; i--)
-    {
-      tmpParent.lvlCenterMass.AddNewMass(newMass);
-      tmpParent = tmpParent.parent;
-    }
+    if (PRINT_INFO)
+      PrintBranchInfo(this);
   }
 
 
@@ -99,8 +79,10 @@ class Branch
     {
       for (Branch branch : branches)
       {
+        pushMatrix();
         DrawBranch();
         branch.Render();
+        popMatrix();
       }
     } else 
     {
@@ -110,7 +92,7 @@ class Branch
 
   boolean Grow()
   {
-    if (lvl > maxLvl)
+    if (lvl >= maxLvl)
       return false;  
     if (branches.size() > 0)
     {
@@ -119,7 +101,7 @@ class Branch
     } else 
     {
       Split();
-      for (int i = 0; i < numChildren; i++)
+      for (int i = 0; i < numChildBranches; i++)
       {
         branches.add(new Branch(this));
       }
@@ -129,48 +111,39 @@ class Branch
 
   void Split()
   {
-    branches.add(new Branch(this, end.copy()));
-    branches.add(new Branch(this, end.copy()));
-  }
-
-  PVector RandomPointOnLine(PVector a, PVector b)
-  {
-    //(1−u)p1+up2
-    //float u = random(1);
-    float u = abs(randomGaussian())*0.2+0.5;
-    return PVector.add(PVector.mult(a, 1 - u), PVector.mult(b, u));
-  }
-
-  PVector NewBranchDir(PVector dir)
-  {
-    PVector newDir = dir.copy().rotate(random(-1*maxBranchAngle, maxBranchAngle)); // create norm vec
-    newDir.setMag(NewBranchMag(dir));
-    return newDir;
+    branches.add(new Branch(this, 1));
+    branches.add(new Branch(this, 1));
   }
 
 
-  float NewBranchMag(PVector dir)
+  float BranchLength(float parentLenght)
   {
-    float mag = dir.mag();
+    /*
+    float mid = (childLenghtlowerBound + childLenghtupperBound)/2;
+    float rand = randomGaussian()*0.2 + mid;
+    return  min(max(rand, childLenghtlowerBound), childLenghtupperBound)*parentLenght;
+    */
+    return random(parentLenght * childLenghtlowerBound, parentLenght* childLenghtupperBound);
+  }
 
-    return random(mag * childLenghtlowerBound, mag* childLenghtupperBound);
+  float BranchAngle()
+  {
+    return random(minBranchAngle, maxBranchAngle);
+  }
+
+  float LocationOnParent()
+  {
+    return max(0.1, min(1, randomGaussian()*0.2 + 0.6));
+    //return random(1);
   }
 
   void DrawBranch()
   {
-    //strokeWeight( maxLvl + 2 - lvl);
     stroke(BRANCH_COL);
-    line(o.x, o.y, end.x, end.y);    
-
-    if (DRAW_LVL_CENTER_OF_MASS && lvl < 1)
-    {
-      lvlCenterMass.Draw();
-    }
-
-    if (DRAW_BRANCH_CENTER_OF_MASS && lvl < maxLvl)
-    {
-      branchCenterMass.Draw();
-    }
+    translate(0, locOnParent*(parent == null ? 0 :  parent.len));
+    rotate(angle);
+    line(0, 0, 0, len);
+    
   }
 
   void PrintBranchID()
@@ -191,12 +164,12 @@ class Branch
   }
   void PrintBranchInfo(Branch branch)
   {
-
+    println(branch);
     println("branch lvl: " + branch.lvl);
     println("num branches: " + branch.branches.size());
-    println("o: ("+branch.o.x+ ","+branch.o.y+")");
-    println("end: ("+branch.end.x+ ","+branch.end.y+")");
-    println("dir: ("+branch.dir.x+ ","+branch.dir.y+")");
+    println("len: "+len);
+    println("angle: "+angle);
+    println("locOnParent: "+locOnParent);
     println("----------");
   }
 }
