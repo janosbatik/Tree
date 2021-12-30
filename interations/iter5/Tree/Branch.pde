@@ -6,7 +6,6 @@
 class Branch 
 {
   // Base data
-  PImage img = loadImage("img/tree-trans2.png");
   Branch parent;
   ArrayList<Branch> branches = new ArrayList<Branch>(); 
   float angle;
@@ -17,15 +16,15 @@ class Branch
   // Accounting data
   int lvl;
   int branchNum;
-  int maxLvl = 3;
+  int maxLvl = 6;
 
   // Limiting variablies
-  int maxNewBranches = 6;
-  int minNewBranches = 2;
-  float minBranchAngle = -PI/2;
-  float maxBranchAngle = PI/2;
+  int maxNewBranches = 10;
+  int minNewBranches = 0;
+  float minBranchAngle = -PI/4;
+  float maxBranchAngle = PI/4;
   float childLenghtlowerBound = 0.3;
-  float childLenghtupperBound = 0.65;
+  float childLenghtupperBound = 0.8;
 
   // Settings
   color BRANCH_COL = color(255);
@@ -140,18 +139,11 @@ class Branch
 
   void DrawBranch()
   {
-    imageMode(CENTER);
     stroke(BRANCH_COL);
-    translate(0, locOnParent*(parent == null ? 0 :  -parent.len));
+    translate(0, locOnParent*(parent == null ? 0 :  parent.len));
     rotate(angle);
-    //line(0, 0, 0, -len);
-    float branchSizeRatio = 1 / float(lvl*2 + 2);
-    float w= 150;float h = 75;
-    for (int i = 0; i <= len; i += h *branchSizeRatio)
-    {
-      float shrinkRatio = (0.4+0.6*(1-i/len));
-      image(img, 0, -(i+h*branchSizeRatio), w*branchSizeRatio*shrinkRatio,h*branchSizeRatio); 
-    }  
+    line(0, 0, 0, len);
+    
   }
 
   void PrintBranchID()
