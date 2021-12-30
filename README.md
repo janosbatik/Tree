@@ -7,3 +7,11 @@ Goals:
 * Anything else of interest
 
 Each interation is stored in the repo in full for interest sake to see how this project eveloves in complexity and to track the flow of ideas.
+
+
+## Iteration 6
+
+Image based design with nice gradient background.
+
+![iter6](img/iterations/iter6.gif "Iteration 6")
+
