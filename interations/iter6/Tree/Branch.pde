@@ -75,19 +75,16 @@ class Branch
 
 
   void Render()
-  {
+  {      
+    DrawBranch();
     if (branches.size() > 0)
     {
       for (Branch branch : branches)
       {
         pushMatrix();
-        DrawBranch();
         branch.Render();
         popMatrix();
       }
-    } else 
-    {
-      DrawBranch();
     }
   }
 
@@ -121,9 +118,9 @@ class Branch
   {
     /*
     float mid = (childLenghtlowerBound + childLenghtupperBound)/2;
-    float rand = randomGaussian()*0.2 + mid;
-    return  min(max(rand, childLenghtlowerBound), childLenghtupperBound)*parentLenght;
-    */
+     float rand = randomGaussian()*0.2 + mid;
+     return  min(max(rand, childLenghtlowerBound), childLenghtupperBound)*parentLenght;
+     */
     return random(parentLenght * childLenghtlowerBound, parentLenght* childLenghtupperBound);
   }
 
@@ -146,12 +143,13 @@ class Branch
     rotate(angle);
     //line(0, 0, 0, -len);
     float branchSizeRatio = 1 / float(lvl*2 + 2);
-    float w= 150;float h = 75;
+    float w= 150;
+    float h = 75;
     for (int i = 0; i <= len; i += h *branchSizeRatio)
     {
       float shrinkRatio = (0.4+0.6*(1-i/len));
-      image(img, 0, -(i+h*branchSizeRatio), w*branchSizeRatio*shrinkRatio,h*branchSizeRatio); 
-    }  
+      image(img, 0, -(i+h*branchSizeRatio), w*branchSizeRatio*shrinkRatio, h*branchSizeRatio);
+    }
   }
 
   void PrintBranchID()

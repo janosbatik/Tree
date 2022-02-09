@@ -4,7 +4,7 @@ PImage img;
 int Y_AXIS = 1;
 int X_AXIS = 2;
 color b1, b2;
-boolean SAVE_OUTPUT = true;
+boolean SAVE_OUTPUT = false;
 SaveUtils utils;
 
 void setup() {
