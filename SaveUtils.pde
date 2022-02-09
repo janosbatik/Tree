@@ -1,34 +1,34 @@
-class SaveUtils {
+class SaveSketch {
 
   // Details of converting to .gif found here:
   // https://sighack.com/post/make-animated-gifs-in-processing
 
   String projName = "processing";
   String outPutFolder = "frames/";
-  String gifFolder = "gif/";
+  String contOutPutFolder = "animate/";
+  String outputFileType = ".png";
+  boolean saving = false;
   String timeStamp;
+
+  boolean PRINT_PROGRESS = true;
+
   int saveCount = 0;
   boolean overrideGifFiles = true;
   int maxFrames = 9999;
-  
-  SaveUtils(int _maxFrames)
+
+  SaveSketch(int _maxFrames)
   {
-    Setup();
+    this();
     maxFrames = _maxFrames;
   }
 
-  SaveUtils(String _projName)
+  SaveSketch(String _projName)
   {
-    Setup();
+    this();
     projName = _projName;
   }
 
-  SaveUtils()
-  {
-    Setup();
-  }
-
-  void Setup()
+  SaveSketch()
   {
     timeStamp = NowString();
   }
@@ -37,23 +37,43 @@ class SaveUtils {
   {
     if (keyPressed) {
       if (key == 's' || key == 'S') {
-        String fileName = outPutFolder+projName+"-"+timeStamp+"-"+nf(saveCount++, 3)+".png";
-        save(fileName);
-        println("Saved frame: "+fileName);
+        SaveStaticFrame();
       }
     }
   }
 
-  void SaveFrame()
+  void SaveStaticFrame()
+  {
+    String fileName = outPutFolder+projName+"-"+timeStamp+"-"+nf(saveCount++, 3)+outputFileType;
+    save(fileName);
+    PrintLn("Saved frame: "+fileName);
+  }
+
+  void SaveFramesOnKeyPress()
+  {
+    if (keyPressed) {
+      if (key == 's' || key == 'S') {
+        saving = true;
+      }
+      if (key == 'x' || key == 'X') {
+        saving = false;
+        PrintLn("Stoped saving frames");
+      }
+    }
+    if (saving)
+      SaveFrameForAnimation();
+  }
+
+  void SaveFrameForAnimation()
   {
     if (saveCount == 0)
-      println("Starting to save frames");
+      PrintLn("Starting to save frames");
     String fileName;
     if (overrideGifFiles)
     {
-      fileName = outPutFolder+gifFolder+nf(saveCount++, 7)+".png";
+      fileName = outPutFolder+contOutPutFolder+nf(saveCount++, 5)+outputFileType;
     } else {
-      fileName = outPutFolder+gifFolder+timeStamp+"/"+nf(saveCount++, 5)+".png";
+      fileName = outPutFolder+contOutPutFolder+timeStamp+"/"+nf(saveCount++, 5)+outputFileType;
     }
     if (saveCount <= maxFrames ) 
       save(fileName);
@@ -69,4 +89,10 @@ class SaveUtils {
       +nf(minute(), 2)+"m"
       +nf(second(), 2);
   }
-};
+
+  void  PrintLn(String str)
+  {
+    if (PRINT_PROGRESS)
+      println(str);
+  }
+}

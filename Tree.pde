@@ -4,36 +4,38 @@ PImage img;
 int Y_AXIS = 1;
 int X_AXIS = 2;
 color b1, b2;
-boolean SAVE_OUTPUT = true;
-SaveUtils utils;
+boolean SAVE_OUTPUT = false;
+SaveSketch save;
 
 void setup() {
   size(700, 700);
-  frameRate(3);
+  frameRate(20);
   background(0);
   stroke(255);
   b1 = color(204, 255, 255); 
   b2 = color(255, 255, 153); 
-  tree = new Branch(height/2);
-  utils = new SaveUtils(tree.maxLvl+1);
+  tree = new Branch(10);
+  save = new SaveSketch(tree.maxLvl+1);
 }
 
 void draw() {
-  
   //setGradient(width/2, 0, width/2, height, b2, b1, Y_AXIS);
-
-  if (!fin) {
   setGradient(0, 0, width, height, b1, b2, Y_AXIS);
-    translate(width/2, height/8*7);
-
-    tree.Render();
-    fin = !tree.Grow();
-    if (SAVE_OUTPUT)
-      utils.SaveFrame();
-  } 
+  AdditionalInfo();
+  translate(width/2, height/8*7);
+  tree.Render();
+  tree.Grow();
+  if (SAVE_OUTPUT)
+    save.SaveStaticFrame();
+  else
+    save.SaveFrameOnKeyPress();
 }
 
-
+void AdditionalInfo()
+{
+  fill(0);
+  text("age: " + tree.age, 10, 10);
+}
 
 void setGradient(int x, int y, float w, float h, color c1, color c2, int axis ) {
 

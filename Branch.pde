@@ -5,55 +5,56 @@
 
 class Branch 
 {
+  // Growth
+  float chanceOfNewBranch = 0.01;
+  boolean hasSplit = false;
+  boolean stillGrowing = true;
+  float chanceOfSplit = 0.2;
+  int minSplitAge = 400;
+  int initLen = 2;
+
+
   // Base data
-  PImage img = loadImage("img/tree-trans2.png");
   Branch parent;
   ArrayList<Branch> branches = new ArrayList<Branch>(); 
   float angle;
   float len; 
   float locOnParent; // [0,1]
-  int numChildBranches;
 
   // Accounting data
   int lvl;
   int branchNum;
   int maxLvl = 3;
+  int age = 1;
 
   // Limiting variablies
-  int maxNewBranches = 6;
-  int minNewBranches = 2;
+  int maxBranches = 6;
   float minBranchAngle = -PI/2;
   float maxBranchAngle = PI/2;
   float childLenghtlowerBound = 0.3;
   float childLenghtupperBound = 0.65;
 
   // Settings
-  color BRANCH_COL = color(255);
+  color BRANCH_COL = color(0);
   boolean PRINT_INFO = false;
 
   // top of branch split
   Branch(Branch _parent, float _locOnParent) 
   {
-    Setup(_parent);
+    this(_parent);
     locOnParent = _locOnParent; // override
   }
 
   // first branch
   Branch(float _len) 
   {
-    Setup(null);
+    this(null);
     len = _len;
   }
 
   Branch(Branch _parent) 
   {
-    Setup(_parent);
-  }
-
-  void Setup(Branch _parent) 
-  {
     parent = _parent;
-    numChildBranches = ceil(random(minNewBranches - 1, maxNewBranches));
 
     if (_parent == null) // if first branch
     {
@@ -65,7 +66,8 @@ class Branch
     {
       angle = BranchAngle();
       locOnParent=LocationOnParent(); 
-      len = BranchLength(_parent.len);
+      len = initLen; 
+      BranchLength(_parent.len);
       lvl = _parent.lvl + 1;
       branchNum = _parent.branches.size();
     }
@@ -74,56 +76,71 @@ class Branch
   }
 
 
+  float GrowthRate(int age)
+  {
+    return sqrt(1.0/(100.0*float(age)));
+  }
+
   void Render()
   {
+    DrawBranch();
     if (branches.size() > 0)
     {
       for (Branch branch : branches)
       {
         pushMatrix();
-        DrawBranch();
         branch.Render();
         popMatrix();
       }
-    } else 
-    {
-      DrawBranch();
     }
   }
 
-  boolean Grow()
+
+  void Grow()
   {
-    if (lvl >= maxLvl)
-      return false;  
+        GrowBranch();
     if (branches.size() > 0)
     {
       for (Branch branch : branches)
+      {
         branch.Grow();
-    } else 
-    {
-      Split();
-      for (int i = 0; i < numChildBranches; i++)
+      }
+    }
+  }
+
+  void GrowBranch()
+  {
+    if (stillGrowing) {
+      len += GrowthRate(age)*len;
+      println(len, GrowthRate(age));
+      if (age > minSplitAge && RandomSuccess(chanceOfSplit) && !hasSplit)
+      {
+        println("split");
+        stillGrowing = false;
+        hasSplit = true;
+        for (int n = 0; n < ceil(random(3)); n++)
+          branches.add(new Branch(this, 1));
+      }
+      if (RandomSuccess(chanceOfNewBranch))
       {
         branches.add(new Branch(this));
       }
     }
-    return true;
+    age++;
   }
 
-  void Split()
+  boolean RandomSuccess(float chanceSuccess)
   {
-    branches.add(new Branch(this, 1));
-    branches.add(new Branch(this, 1));
+    return random(1) < chanceSuccess;
   }
-
 
   float BranchLength(float parentLenght)
   {
     /*
     float mid = (childLenghtlowerBound + childLenghtupperBound)/2;
-    float rand = randomGaussian()*0.2 + mid;
-    return  min(max(rand, childLenghtlowerBound), childLenghtupperBound)*parentLenght;
-    */
+     float rand = randomGaussian()*0.2 + mid;
+     return  min(max(rand, childLenghtlowerBound), childLenghtupperBound)*parentLenght;
+     */
     return random(parentLenght * childLenghtlowerBound, parentLenght* childLenghtupperBound);
   }
 
@@ -144,14 +161,7 @@ class Branch
     stroke(BRANCH_COL);
     translate(0, locOnParent*(parent == null ? 0 :  -parent.len));
     rotate(angle);
-    //line(0, 0, 0, -len);
-    float branchSizeRatio = 1 / float(lvl*2 + 2);
-    float w= 150;float h = 75;
-    for (int i = 0; i <= len; i += h *branchSizeRatio)
-    {
-      float shrinkRatio = (0.4+0.6*(1-i/len));
-      image(img, 0, -(i+h*branchSizeRatio), w*branchSizeRatio*shrinkRatio,h*branchSizeRatio); 
-    }  
+    line(0, 0, 0, -len);
   }
 
   void PrintBranchID()
